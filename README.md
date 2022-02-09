@@ -1,5 +1,5 @@
 # PowerFeeNotic
-##宿舍防断电小脚本  
+## 中南宿舍防断电小脚本  
 有四个地方需要改动  
 1. user_account 输入学工号，你也可以改动SignType用其他方式的登陆
 2. password 输入密码，不用base64编码了，后面已经写了
