@@ -2,58 +2,6 @@ use std::collections::HashMap;
 
 use reqwest::header::HeaderMap;
 
-///此处为请求头的组成
-///
-/// User-agent标明是正常请求操作，防止被反爬
-///
-/// Origin 是因为网站开启了strict-origin-when-cross-origin策略不得不采用
-///
-/// Referer 是网站开启了防止恶意请求操作的功能
-fn header_make() -> HeaderMap {
-    let mut h = reqwest::header::HeaderMap::new();
-    h.insert("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.76".parse().unwrap());
-    h.insert("Origin", "http://ecard.csu.edu.cn:8070".parse().unwrap());
-    h.insert("Referer", "http://ecard.csu.edu.cn:8070/Account/Login".parse().unwrap());
-    h
-}
-
-///此处为登陆表单的组成
-///
-/// next_url决定登陆后重定向到哪个网址
-///
-/// 具体页面可以通过对next_url使用base64::decode()得知
-///
-/// 具体有那些页面可以登陆http://ecard.csu.edu.cn:8070/Account/Login查看
-///
-/// 例子
-/// ```
-/// let next_url = "aHR0cDovL2VjYXJkLmNzdS5lZHUuY246ODA3MC9BdXRvUGF5L1Bvd2VyRmVlL0NzdUluZGV4lo";
-/// let url = base64::decode("next_url");
-/// //url = "http://ecard.csu.edu.cn:8070/AutoPay/PowerFee/CsuIndex"
-/// ```
-/// SignType为登陆方式有以下三种,此处选用学工号
-/// ```
-/// //校园卡号
-/// "SynCard"
-/// //学工号
-/// "SynSno"
-/// //服务平台账号
-/// "SynDream"
-/// ```
-/// openid为空，确实在表单上就是空，也不知道为什么
-///
-/// Schoolcode在表单上被写死是csu
-fn map_maker<'a>(user_account: &'a str, password: &'a str) -> HashMap<&'a str, &'a str> {
-    let mut map = HashMap::new();
-    map.insert("UserAccount", user_account);
-    map.insert("Password", password);
-    map.insert("NextUrl", "");
-    map.insert("SignType", "SynSno");
-    map.insert("openid", "");
-    map.insert("Schoolcode", "csu");
-    map
-}
-
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
     ///
@@ -68,9 +16,15 @@ async fn main() -> Result<(), reqwest::Error> {
     /// aspnet_sessionld请登陆浏览器查看获得
     ///
     /// 以及最后的sendkey和server ip:port记得更改
+    ///
+    /// money_lower是发送提醒的余额最低值,务必输入浮点数
     let user_account = "1234561234";
     let password = "123456";
     let aspnet_sessionld = "ASP.NET_SessionId=q************v;";
+    let sendkey = "your sendkey";
+    let server_ip_port = "1.1.1.1:1111";
+    let money_lower: f64 = 10.0;
+
     ///此处为固定设置
     ///
     /// password要经过base64编码后才能使用
@@ -132,12 +86,64 @@ async fn main() -> Result<(), reqwest::Error> {
     //采用server酱的开源版本wecom酱
     //自行部署在服务器上
     //具体可看https://github.com/easychen/wecomchan
-    if money < 10.0 {
-        let sendkey = "your sendkey";
+    if money <= money_lower {
         let msg = "剩余的电费 ".to_string() + &money.to_string();
-        let url = "http://your server:port/wecomchan?sendkey=".to_string() + sendkey + "&msg=" + msg.as_str() + "&msg_type=text";
+        let url = "http://".to_string() + server_ip_port + "/wecomchan?sendkey=" + sendkey + "&msg=" + msg.as_str() + "&msg_type=text";
         // println!("{}",url);
         reqwest::get(url).await;
     }
     Ok(())
+}
+
+
+///此处为请求头的组成
+///
+/// User-agent标明是正常请求操作，防止被反爬
+///
+/// Origin 是因为网站开启了strict-origin-when-cross-origin策略不得不采用
+///
+/// Referer 是网站开启了防止恶意请求操作的功能
+fn header_make() -> HeaderMap {
+    let mut h = reqwest::header::HeaderMap::new();
+    h.insert("User-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.76".parse().unwrap());
+    h.insert("Origin", "http://ecard.csu.edu.cn:8070".parse().unwrap());
+    h.insert("Referer", "http://ecard.csu.edu.cn:8070/Account/Login".parse().unwrap());
+    h
+}
+
+///此处为登陆表单的组成
+///
+/// next_url决定登陆后重定向到哪个网址
+///
+/// 具体页面可以通过对next_url使用base64::decode()得知
+///
+/// 具体有那些页面可以登陆http://ecard.csu.edu.cn:8070/Account/Login查看
+///
+/// 例子
+/// ```
+/// let next_url = "aHR0cDovL2VjYXJkLmNzdS5lZHUuY246ODA3MC9BdXRvUGF5L1Bvd2VyRmVlL0NzdUluZGV4lo";
+/// let url = base64::decode("next_url");
+/// //url = "http://ecard.csu.edu.cn:8070/AutoPay/PowerFee/CsuIndex"
+/// ```
+/// SignType为登陆方式有以下三种,此处选用学工号
+/// ```
+/// //校园卡号
+/// "SynCard"
+/// //学工号
+/// "SynSno"
+/// //服务平台账号
+/// "SynDream"
+/// ```
+/// openid为空，确实在表单上就是空，也不知道为什么
+///
+/// Schoolcode在表单上被写死是csu
+fn map_maker<'a>(user_account: &'a str, password: &'a str) -> HashMap<&'a str, &'a str> {
+    let mut map = HashMap::new();
+    map.insert("UserAccount", user_account);
+    map.insert("Password", password);
+    map.insert("NextUrl", "");
+    map.insert("SignType", "SynSno");
+    map.insert("openid", "");
+    map.insert("Schoolcode", "csu");
+    map
 }
