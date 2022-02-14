@@ -34,7 +34,7 @@ async fn main() -> Result<(), reqwest::Error> {
     /// map_maker()生成请求所需表单
 
     let password = base64::encode(password);
-    let header = header_make();
+    let mut header = header_make();
     let map = map_maker(user_account, password.as_str());
 
     ///此处为获取iPlanetDirectoryPro
@@ -44,7 +44,7 @@ async fn main() -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
     let res = client.post(url)
         .json(&map)
-        .headers(header)
+        .headers(header.clone())
         .send().await?;
     let ipdp = res.headers().get("set-cookie").unwrap().to_str().unwrap().split_once(";").unwrap().0;
     // println!("{:?}",ipdp);
@@ -58,7 +58,6 @@ async fn main() -> Result<(), reqwest::Error> {
     /// "Cookie":"ASP.NET_SessionId=qds51a...asddw2v; iPlanetDirectoryPro=U3lu...OTcx"
     /// ```
     let url = "http://ecard.csu.edu.cn:8070/AutoPay/PowerFee/CsuIndex";
-    let mut header = header_make();
     let cookie = aspnet_sessionld.to_owned() + ipdp;
     // println!("{:?}",cookie);
     header.insert("Cookie", cookie.parse().unwrap());
