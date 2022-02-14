@@ -9,4 +9,5 @@
 其中3，4点是用到了wecom酱作为消息推送  
 具体详情看 [wecom酱](https://github.com/easychen/wecomchan)
 
-技术水平属实扣脚，拜托大佬轻喷!
+技术水平属实扣脚，拜托大佬轻喷!  
+隔壁还有个python版本的[python版本](https://github.com/c76d3656/PowerFeeNotic-python)
